@@ -16,11 +16,13 @@ function Home() {
   const handleKeyDown = async (e) => {
     if (e.key === "Enter" && tarea.titulo.trim() !== "") {
       const data = await agregarTarea();
-      console.log(data)
-       getTasks();
+      if (data.ok) {
+        alert("Tarea agregada correctamente");
+      }
+      vaciarTarea();
+      getTasks();
       setAgregado(false);
     }
-    
   };
 
   const agregarTarea = async () => {
@@ -36,6 +38,14 @@ function Home() {
   useEffect(() => {
     getTasks();
   }, []);
+
+  const vaciarTarea = () => {
+    setTarea({
+      titulo: "",
+      descripcion: "",
+      fechaLimite: "",
+    });
+  };
 
   const getTasks = async () => {
     const res = await fetch("http://localhost:3030/api/v1/tasks", {
@@ -81,7 +91,7 @@ function Home() {
           {!agregando ? (
             <button
               onClick={handleAgregar}
-              className="flex flex-row gap-2 items-center bg-gray-900 p-2 rounded-lg mt-3"
+              className="flex flex-row gap-2 items-center bg-gray-900 p-3 rounded-lg mt-3"
             >
               <Plus />
               Agregar una tarea
@@ -89,10 +99,14 @@ function Home() {
           ) : (
             <input
               autoFocus
+              onBlur={() => {
+                vaciarTarea()
+                setAgregado(false);
+              }}
               value={tarea.titulo}
               onChange={(e) => setTarea({ ...tarea, titulo: e.target.value })}
               onKeyDown={handleKeyDown}
-              className="flex flex-row gap-2 items-center bg-gray-900 p-2 rounded-lg mt-3"
+              className="flex flex-row gap-2 items-center bg-gray-900 p-3 rounded-lg mt-3"
             ></input>
           )}
         </div>
