@@ -6,6 +6,7 @@ import taskRouter from './routes/taskRoutes.js';
 
 const app = express();
 
+app.use(express.json())
 app.use(morgan('dev'));
 app.use(`${config.BASE_URL}/tasks`, taskRouter);
 

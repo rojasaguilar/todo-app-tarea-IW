@@ -35,9 +35,9 @@ const getTask = async (req, res) => {
 
 const createTask = async (req, res) => {
     const data = req.body;
-    const task = await taskModel.create(data);
+
     try {
-        const task = await taskModel.findById(id);
+        const task = await taskModel.create(data);
         return res.status(201).json({
             status: 'success',
             data: { task },
