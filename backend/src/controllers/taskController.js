@@ -50,16 +50,15 @@ const createTask = async (req, res) => {
     }
 };
 
-const completeTask = async (req, res) => {
+const updateTask = async (req, res) => {
     const { id } = req.params;
     const data = req.body;
-
     try {
         const task = await taskModel.findByIdAndUpdate(id, data, {
             new: true,
             runValidators: true,
         });
-        return res.status(201).json({
+        return res.status(200).json({
             status: 'success',
             data: { task },
         });
@@ -91,6 +90,6 @@ export default {
     getTasks,
     getTask,
     createTask,
-    completeTask,
+    updateTask,
     deleteTask,
 };

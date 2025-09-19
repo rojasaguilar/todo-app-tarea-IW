@@ -35,6 +35,25 @@ function Home() {
     });
   };
 
+  const handleCompleted = async (t) => {
+    t = { ...t, completada: true };
+    const data = await completarTarea(t);
+    if (data.ok) {
+      alert("Tarea completada");
+    }
+    getTasks();
+  };
+
+  const completarTarea = async (tarea) => {
+    return await fetch(`http://localhost:3030/api/v1/tasks/${tarea._id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(tarea),
+    });
+  };
+
   useEffect(() => {
     getTasks();
   }, []);
@@ -64,7 +83,7 @@ function Home() {
         {/* TAREAS */}
         <div id="uncompleted-tasks" className="flex flex-col gap-2 mt-4">
           {tasks.map((t) =>
-            !t.completada ? <TaskCard task={t} key={t._id} /> : null
+            !t.completada ? <TaskCard task={t} key={t._id} handleCompleted={handleCompleted} /> : null
           )}
         </div>
 
@@ -84,14 +103,19 @@ function Home() {
           {/* COMPLETED TASKS */}
           <div id="completed-tasks" className="flex flex-col gap-2 mt-6">
             {tasks.map((t) =>
-              t.completada ? <TaskCard task={t} key={t._id} /> : null
+              t.completada ? (
+                <TaskCard
+                  task={t}
+                  key={t._id}
+                />
+              ) : null
             )}
           </div>
 
           {!agregando ? (
             <button
               onClick={handleAgregar}
-              className="flex flex-row gap-2 items-center bg-gray-900 p-3 rounded-lg mt-3"
+              className="flex flex-row gap-2 items-center bg-gray-900 p-3 rounded-lg mt-3 text-white"
             >
               <Plus />
               Agregar una tarea
@@ -100,13 +124,13 @@ function Home() {
             <input
               autoFocus
               onBlur={() => {
-                vaciarTarea()
+                vaciarTarea();
                 setAgregado(false);
               }}
               value={tarea.titulo}
               onChange={(e) => setTarea({ ...tarea, titulo: e.target.value })}
               onKeyDown={handleKeyDown}
-              className="flex flex-row gap-2 items-center bg-gray-900 p-3 rounded-lg mt-3"
+              className="flex flex-row gap-2 items-center bg-gray-900 p-3 rounded-lg mt-3 text-white"
             ></input>
           )}
         </div>
