@@ -9,9 +9,9 @@ frontend/dist/
 backend/dist/
 
 # Archivos de entorno
-.env
-backend/.env
-frontend/.env
+# .env
+# backend/.env
+# frontend/.env
 
 # Logs
 npm-debug.log*
