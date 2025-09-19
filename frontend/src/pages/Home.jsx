@@ -4,12 +4,38 @@ import TaskCard from "../components/TaskCard";
 
 function Home() {
   const [tasks, setTasks] = useState([]);
+  const [agregando, setAgregado] = useState(false);
+  const [tarea, setTarea] = useState({
+    titulo: "",
+    descripcion: "",
+    fechaLimite: "",
+  });
+
+  const handleAgregar = () => setAgregado(true);
+
+  const handleKeyDown = async (e) => {
+    if (e.key === "Enter" && tarea.titulo.trim() !== "") {
+      const data = await agregarTarea();
+      console.log(data)
+       getTasks();
+      setAgregado(false);
+    }
+    
+  };
+
+  const agregarTarea = async () => {
+    return await fetch("http://localhost:3030/api/v1/tasks", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(tarea),
+    });
+  };
 
   useEffect(() => {
     getTasks();
   }, []);
-
-  useEffect(() => {}, [tasks]);
 
   const getTasks = async () => {
     const res = await fetch("http://localhost:3030/api/v1/tasks", {
@@ -52,10 +78,23 @@ function Home() {
             )}
           </div>
 
-          <button className="flex flex-row gap-2 items-center bg-gray-900 p-2 rounded-lg mt-3">
-            <Plus/>
-            Agregar una tarea
-          </button>
+          {!agregando ? (
+            <button
+              onClick={handleAgregar}
+              className="flex flex-row gap-2 items-center bg-gray-900 p-2 rounded-lg mt-3"
+            >
+              <Plus />
+              Agregar una tarea
+            </button>
+          ) : (
+            <input
+              autoFocus
+              value={tarea.titulo}
+              onChange={(e) => setTarea({ ...tarea, titulo: e.target.value })}
+              onKeyDown={handleKeyDown}
+              className="flex flex-row gap-2 items-center bg-gray-900 p-2 rounded-lg mt-3"
+            ></input>
+          )}
         </div>
       </div>
     </>
