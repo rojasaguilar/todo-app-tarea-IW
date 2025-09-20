@@ -1,11 +1,11 @@
 import { useState } from "react";
 
-function TaskCard({ task, key, handleCompleted }) {
+function TaskCard({ task, key, handleCompleted, handleSelect }) {
   const [estado, setEstado] = useState(false);
 
   return (
     <>
-      <div className="flex flex-row items-center gap-4 bg-gray-900 p-3 rounded-lg">
+      <div onClick={() => handleSelect(task)} className="flex flex-row items-center gap-4 bg-gray-900 p-3 rounded-lg">
         {/* TITULO */}
         <div
           onClick={() => {

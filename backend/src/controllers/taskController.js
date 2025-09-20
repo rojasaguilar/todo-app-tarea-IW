@@ -73,7 +73,7 @@ const updateTask = async (req, res) => {
 const deleteTask = async (req, res) => {
     const { id } = req.params;
     try {
-        const task = await taskModel.findByIdAndRemove(id);
+        const task = await taskModel.findByIdAndDelete(id);
         return res.status(200).json({
             status: 'sucess',
             data: task,

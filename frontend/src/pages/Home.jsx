@@ -12,6 +12,8 @@ function Home() {
     fechaLimite: "",
   });
 
+  const [tareaSeleccionada, setTareaSeleccionada] = useState(null);
+
   const handleAgregar = () => setAgregado(true);
 
   const handleKeyDown = async (e) => {
@@ -55,6 +57,11 @@ function Home() {
     });
   };
 
+  const handleSelect = async (tarea) => {
+    setTareaSeleccionada(tarea);
+    console.log(tareaSeleccionada);
+  };
+
   useEffect(() => {
     getTasks();
   }, []);
@@ -74,70 +81,127 @@ function Home() {
     const data = await res.json();
     setTasks(data.data.tasks);
   };
+
+  const handleDelete = async (id) => {
+    const response = await borrarTarea(id);
+    if (response.ok) {
+      alert("Tarea borrada exitosamente");
+    }
+    getTasks();
+    setTareaSeleccionada({})
+  };
+
+  const borrarTarea = async (id) => {
+    return await fetch(`http://localhost:3030/api/v1/tasks/${id}`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+  };
+
+  const handleUpdate = async (e) => {
+    if (e.key === "Enter") {
+      const response = await editarTarea(tareaSeleccionada);
+      if (response.ok) {
+        alert("Tarea modificada exitosamente");
+        getTasks();
+      }
+    }
+  };
+
+  const editarTarea = async (tarea) => {
+    return await fetch(`http://localhost:3030/api/v1/tasks/${tarea._id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(tareaSeleccionada),
+    });
+  };
+
   return (
     <>
-      <div id="container" className="p-20 flex flex-col gap-8">
-        <div id="topBar" className="flex flex-row gap-4 ">
-          <HomeIcon size={30} strokeWidth={2} />
-          <h1 className="text-2xl font-semibold bg-amber-100">Tareas</h1>
-        </div>
-        {/* TAREAS */}
-        <div id="uncompleted-tasks" className="flex flex-col gap-2 mt-4">
-          {tasks.map((t) =>
-            !t.completada ? <TaskCard task={t} key={t._id} handleCompleted={handleCompleted} /> : null
-          )}
-        </div>
-
-        <div className="completed-tasks flex flex-col ">
-          <div className="action-deploy flex flex-row bg-red-100 p-2">
-            <ChevronRight />
-            <h2>Completadas: </h2>
-            <p>
-              {tasks.reduce(
-                (sum, current) =>
-                  current.completada === true ? (sum = sum + 1) : (sum = sum),
-                0
-              )}
-            </p>
+      <div className="fixed inset-0 grid grid-cols-7 ">
+        {/* CONTENEDOR TAREAS */}
+        <div
+          id="container"
+          className="p-20 flex flex-col gap-8 col-span-5 max-h-screen  overflow-y-auto"
+        >
+          <div id="topBar" className="flex flex-row gap-4 ">
+            <HomeIcon size={30} strokeWidth={2} />
+            <h1 className="text-2xl font-semibold bg-amber-100">Tareas</h1>
           </div>
 
-          {/* COMPLETED TASKS */}
-          <div id="completed-tasks" className="flex flex-col gap-2 mt-6">
+          {/* TAREAS */}
+          <div id="uncompleted-tasks" className="flex flex-col gap-2 mt-4 ">
             {tasks.map((t) =>
-              t.completada ? (
+              !t.completada ? (
                 <TaskCard
+                  handleSelect={handleSelect}
                   task={t}
                   key={t._id}
+                  handleCompleted={handleCompleted}
                 />
               ) : null
             )}
           </div>
 
-          {!agregando ? (
-            <button
-              onClick={handleAgregar}
-              className="flex flex-row gap-2 items-center bg-gray-900 p-3 rounded-lg mt-3 text-white"
-            >
-              <Plus />
-              Agregar una tarea
-            </button>
-          ) : (
-            <input
-              autoFocus
-              onBlur={() => {
-                vaciarTarea();
-                setAgregado(false);
-              }}
-              value={tarea.titulo}
-              onChange={(e) => setTarea({ ...tarea, titulo: e.target.value })}
-              onKeyDown={handleKeyDown}
-              className="flex flex-row gap-2 items-center bg-gray-900 p-3 rounded-lg mt-3 text-white"
-            ></input>
-          )}
+          <div className="completed-tasks flex flex-col ">
+            <div className="action-deploy flex flex-row bg-red-100 p-2">
+              <ChevronRight />
+              <h2>Completadas: </h2>
+              <p>
+                {tasks.reduce(
+                  (sum, current) =>
+                    current.completada === true ? (sum = sum + 1) : (sum = sum),
+                  0
+                )}
+              </p>
+            </div>
+
+            {/* COMPLETED TASKS */}
+            <div id="completed-tasks" className="flex flex-col gap-2 mt-6">
+              {tasks.map((t) =>
+                t.completada ? (
+                  <TaskCard handleSelect={handleSelect} task={t} key={t._id} />
+                ) : null
+              )}
+            </div>
+
+            {!agregando ? (
+              <button
+                onClick={handleAgregar}
+                className="flex flex-row gap-2 items-center bg-gray-900 p-3 rounded-lg mt-3 text-white"
+              >
+                <Plus />
+                Agregar una tarea
+              </button>
+            ) : (
+              <input
+                autoFocus
+                onBlur={() => {
+                  vaciarTarea();
+                  setAgregado(false);
+                }}
+                value={tarea.titulo}
+                onChange={(e) => setTarea({ ...tarea, titulo: e.target.value })}
+                onKeyDown={handleKeyDown}
+                className="flex flex-row gap-2 items-center bg-gray-900 p-3 rounded-lg mt-3 text-white"
+              ></input>
+            )}
+          </div>
+        </div>
+{/* DETALLE TAREAS */}
+        <div className="col-span-2 ">
+          <TaskDetails
+            task={tareaSeleccionada}
+            handleDelete={handleDelete}
+            setTask={setTareaSeleccionada}
+            handleUpdate={handleUpdate}
+          />
         </div>
       </div>
-
-      <TaskDetails task={{titulo: "buena"}}/>
     </>
   );
 }
