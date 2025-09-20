@@ -1,6 +1,7 @@
 import { ChevronRight, HomeIcon, Plus } from "lucide-react";
 import React, { useState, useEffect } from "react";
 import TaskCard from "../components/TaskCard";
+import TaskDetails from "../components/TaskDetails";
 
 function Home() {
   const [tasks, setTasks] = useState([]);
@@ -135,6 +136,8 @@ function Home() {
           )}
         </div>
       </div>
+
+      <TaskDetails task={{titulo: "buena"}}/>
     </>
   );
 }
