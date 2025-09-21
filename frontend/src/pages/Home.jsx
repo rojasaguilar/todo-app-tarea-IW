@@ -3,8 +3,13 @@ import React, { useState, useEffect } from "react";
 import TaskCard from "../components/TaskCard";
 import TaskDetails from "../components/TaskDetails";
 
+import useDelete from "../components/hooks/useDelete";
+import useAdd from "../components/hooks/useAdd";
+import useUpdate from "../components/hooks/useUpdate";
+import useCompleteTask from "../components/hooks/useCompleteTask";
+
 function Home() {
-  const [tasks, setTasks] = useState([]);
+  const [listaTareas, setListaTareas] = useState([]);
   const [agregando, setAgregado] = useState(false);
   const [tarea, setTarea] = useState({
     titulo: "",
@@ -12,59 +17,9 @@ function Home() {
     fechaLimite: "",
   });
 
+  const [show, setShow] = useState(false);
+
   const [tareaSeleccionada, setTareaSeleccionada] = useState(null);
-
-  const handleAgregar = () => setAgregado(true);
-
-  const handleKeyDown = async (e) => {
-    if (e.key === "Enter" && tarea.titulo.trim() !== "") {
-      const data = await agregarTarea();
-      if (data.ok) {
-        alert("Tarea agregada correctamente");
-      }
-      vaciarTarea();
-      getTasks();
-      setAgregado(false);
-    }
-  };
-
-  const agregarTarea = async () => {
-    return await fetch("http://localhost:3030/api/v1/tasks", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(tarea),
-    });
-  };
-
-  const handleCompleted = async (t) => {
-    t = { ...t, completada: true };
-    const data = await completarTarea(t);
-    if (data.ok) {
-      alert("Tarea completada");
-    }
-    getTasks();
-  };
-
-  const completarTarea = async (tarea) => {
-    return await fetch(`http://localhost:3030/api/v1/tasks/${tarea._id}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(tarea),
-    });
-  };
-
-  const handleSelect = async (tarea) => {
-    setTareaSeleccionada(tarea);
-    console.log(tareaSeleccionada);
-  };
-
-  useEffect(() => {
-    getTasks();
-  }, []);
 
   const vaciarTarea = () => {
     setTarea({
@@ -79,46 +34,36 @@ function Home() {
       method: "GET",
     });
     const data = await res.json();
-    setTasks(data.data.tasks);
+    setListaTareas(data.data.tasks);
   };
 
-  const handleDelete = async (id) => {
-    const response = await borrarTarea(id);
-    if (response.ok) {
-      alert("Tarea borrada exitosamente");
-    }
+  const handleSelect = async (tarea) => {
+    setTareaSeleccionada(tarea);
+    setShow(true);
+  };
+
+  const onClose = () => {
+    setShow(false);
+  };
+
+  useEffect(() => {
     getTasks();
-    setTareaSeleccionada({})
-  };
+  }, []);
 
-  const borrarTarea = async (id) => {
-    return await fetch(`http://localhost:3030/api/v1/tasks/${id}`, {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-  };
+  //custom hooks
 
-  const handleUpdate = async (e) => {
-    if (e.key === "Enter") {
-      const response = await editarTarea(tareaSeleccionada);
-      if (response.ok) {
-        alert("Tarea modificada exitosamente");
-        getTasks();
-      }
-    }
-  };
+  const handleDelete = useDelete({ getTasks, setShow, setTareaSeleccionada });
 
-  const editarTarea = async (tarea) => {
-    return await fetch(`http://localhost:3030/api/v1/tasks/${tarea._id}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(tareaSeleccionada),
-    });
-  };
+  const [handleAgregar, handleKeyDown] = useAdd({
+    getTasks,
+    vaciarTarea,
+    setAgregado,
+    tarea,
+  });
+
+  const handleUpdate = useUpdate({ tareaSeleccionada, getTasks });
+
+  const handleCompleted = useCompleteTask({ tarea, getTasks });
 
   return (
     <>
@@ -135,7 +80,7 @@ function Home() {
 
           {/* TAREAS */}
           <div id="uncompleted-tasks" className="flex flex-col gap-2 mt-4 ">
-            {tasks.map((t) =>
+            {listaTareas.map((t) =>
               !t.completada ? (
                 <TaskCard
                   handleSelect={handleSelect}
@@ -148,11 +93,11 @@ function Home() {
           </div>
 
           <div className="completed-tasks flex flex-col ">
-            <div className="action-deploy flex flex-row bg-red-100 p-2">
+            <div className="action-deploy flex flex-row p-2">
               <ChevronRight />
-              <h2>Completadas: </h2>
+              <h2>Completadas:&nbsp;</h2>
               <p>
-                {tasks.reduce(
+                {listaTareas.reduce(
                   (sum, current) =>
                     current.completada === true ? (sum = sum + 1) : (sum = sum),
                   0
@@ -162,7 +107,7 @@ function Home() {
 
             {/* COMPLETED TASKS */}
             <div id="completed-tasks" className="flex flex-col gap-2 mt-6">
-              {tasks.map((t) =>
+              {listaTareas.map((t) =>
                 t.completada ? (
                   <TaskCard handleSelect={handleSelect} task={t} key={t._id} />
                 ) : null
@@ -192,13 +137,15 @@ function Home() {
             )}
           </div>
         </div>
-{/* DETALLE TAREAS */}
+        {/* DETALLE TAREAS */}
         <div className="col-span-2 ">
           <TaskDetails
             task={tareaSeleccionada}
             handleDelete={handleDelete}
             setTask={setTareaSeleccionada}
             handleUpdate={handleUpdate}
+            show={show}
+            onClose={onClose}
           />
         </div>
       </div>
